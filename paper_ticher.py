@@ -26,9 +26,9 @@ class SectionStruct(BaseModel):
 
 load_dotenv()
 class PaperTicher:
-    def __init__(self, paper_path = None):
+    def __init__(self, paper_path = None, llm_model_name:str = None):
         self.paper_path = paper_path
-        self.llm = self.get_llm_model()
+        self.llm = self.get_llm_model(llm_model_name)
 
     def set_paper_path(self, paper_path):
         self.paper_path = paper_path
@@ -112,7 +112,10 @@ class PaperTicher:
     
     def llm_response(self,  messages: list):
         messages.insert(0, {"role": "user", "content": self.get_system_prompt()})
-        respond = self.llm.invoke(messages).content
+        try:
+            respond = self.llm.invoke(messages).content
+        except ChatGoogleGenerativeAIError as e:
+            return f"Gemini returned an error: {e}"
         messages.pop(0)
         return respond
     

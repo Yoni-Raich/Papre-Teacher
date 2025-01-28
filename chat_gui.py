@@ -1,8 +1,10 @@
 import streamlit as st
 from paper_ticher import PaperTicher
-
-paper_ticher = PaperTicher()
-llm = paper_ticher.get_llm_model()
+llm_name = st.selectbox("select llm model", 
+                                         ["gemini-2.0-flash-thinking-exp-01-21", 
+                                          "gemini-ewp-name"])
+paper_ticher = PaperTicher(llm_name)
+llm = paper_ticher.get_llm_model(llm_name)
 
 # RTL CSS styling
 rtl_css = """
