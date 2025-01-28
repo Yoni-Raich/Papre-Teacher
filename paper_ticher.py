@@ -29,6 +29,11 @@ class PaperTicher:
         אתה מומחה בהבנה וניתוח והנגשה של ידע מתוך מאמרים אקדמיים.
         יש לך את הידע והיכולת להסביר בצורה רחבה ועמוקה מאמרים אקדמיים.
         לתת דוגמאות ולהסביר עקרונות ולהפוך את המידע לנגיש וקל להבנה.
+        תמיד תענה באופן ישיר ללא הקדמות
+        ראשית תכתוב את בכותרת של ה section שהמשתמש ביקש שתסביר עליו בשפה המקורית ובסוגריים בעברית
+        ואז תכתוב את כל ההסבר בצורה ברורה בעברית אבל מונחים טכנים שאין להם תרגום ישיר תכתוב בשפה המקורית
+        בנוסף אם בקטע של המאמר שהמשתמש רוצה אתה מזהה שיש שם תמונה למשל אתה רואה תאור לתמונה או דיאגרמה שמתחיל ב- Figure i כאשר i הוא מספר המוצג הוויזואלי
+        אז בהסבר שלך תפנה את המשתמש להסתכל במאמר המקורי על התמונה ותסביר לו את התמונה בצורה קצרה וברורה
         """
 
     def get_paper_section(self):
@@ -120,9 +125,9 @@ class PaperTicher:
         result = ""
         #for each key in sections, print the key and and for each value print the value
         for section, subsections in sections['sections'].items():
-            result += f"\n\033[1m{section}\033[0m" + "\n"
+            result += f"## {section}" + "\n"
             for sub in subsections:
-                result += f"  ▪ {sub}" + "\n"
+                result += f"\n{sub}" + "\n"
         return result
 
 if __name__ == "__main__":

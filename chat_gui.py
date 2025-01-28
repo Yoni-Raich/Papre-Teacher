@@ -39,16 +39,50 @@ if 'messages' not in st.session_state:
 
 
 # Sidebar for HTML upload
+# Sidebar for HTML upload
 with st.sidebar:
     st.header("File Upload")
-    uploaded_file = st.file_uploader("Upload Papre file", type=[".pdf"])
-    paper_ticher.set_paper_path(uploaded_file)
-    file_content = paper_ticher.get_paper_content()
-    if st.session_state.messages == [] and file_content is not None:
-        with st.spinner("Preparing the paper abstract"):
-            st.write(paper_ticher.get_paper_structure())
-
+    uploaded_file = st.file_uploader("Upload Paper file", type=[".pdf"])
+    
+    if uploaded_file:
+        # Reset processing flag if new file uploaded
+        if 'processed_file' not in st.session_state or st.session_state.processed_file != uploaded_file.name:
+            st.session_state.processed_file = uploaded_file.name
+            st.session_state.sections_processed = False  # Reset processing flag
         
+        paper_ticher.set_paper_path(uploaded_file)
+        file_content = paper_ticher.get_paper_content()
+
+        # Process sections only once per file
+        if file_content and not st.session_state.get('sections_processed', False):
+            with st.spinner("Preparing paper abstract"):
+                sections = paper_ticher.get_paper_section()
+                st.session_state.sections = sections
+                st.session_state.sections_processed = True
+
+        # Create buttons using cached sections
+        if st.session_state.get('sections_processed', False):
+            for section, subsections in st.session_state.sections['sections'].items():
+                with st.expander(section):
+                    for sub in subsections:
+                        if st.button(sub):
+                            st.session_state.subsection_clicked = True
+                            st.session_state.messages = []
+                            st.session_state.selected_subsection = sub
+
+# Handle button clicks
+if st.session_state.get('subsection_clicked', False):
+    st.session_state.subsection_clicked = False
+    auto_prompt = f"בבקשה תסביר את הסקשן: {st.session_state.selected_subsection}"
+
+    # Add auto-generated message to chat
+    st.session_state.messages.append({"role": "user", "content": auto_prompt})
+    
+    # Generate and display response
+    with st.spinner("Generating explanation..."):
+        answer = paper_ticher.llm_response(st.session_state.messages)
+        st.session_state.messages.pop()  # Remove auto-generated message
+        st.session_state.messages.append({"role": "assistant", "content": answer})  
 
 # Display chat messages
 for msg in st.session_state.messages:
