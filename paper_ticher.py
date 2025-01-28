@@ -63,7 +63,9 @@ class PaperTicher:
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
         chain = section_prompt | self.llm | parser
-        return chain.invoke({"paper": self.get_paper_content()})
+        sections = chain.invoke({"paper": self.get_paper_content()})
+        print(sections)
+        return sections
 
     def get_paper_content(self):
         paper_prompt = """Here is the content of the paper you will be focusing on today. 
