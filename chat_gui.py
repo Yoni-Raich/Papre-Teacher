@@ -80,7 +80,9 @@ if st.session_state.get('subsection_clicked', False):
     
     # Generate and display response
     with st.spinner("Generating explanation..."):
+        st.session_state.messages.append({"role": "user", "content": file_content})
         answer = paper_ticher.llm_response(st.session_state.messages)
+        st.session_state.messages.pop()
         st.session_state.messages.pop()  # Remove auto-generated message
         st.session_state.messages.append({"role": "assistant", "content": answer})  
 
