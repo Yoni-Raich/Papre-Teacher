@@ -11,8 +11,17 @@ import os
 class SectionStruct(BaseModel):
     sections: Dict[str, List[str]] = Field(
         description="Ordered dictionary mapping main section titles to lists of their subsections. "
-                    "Example: {'Introduction': ['1.1 Background', '1.2 Related Work'], "
-                    "'Methods': ['2.1 Data Collection', '2.2 Analysis']}"
+                    "for example: \n"
+                    "\n{\n"
+                    "    'Introduction': [\n"
+                    "        '1.1 Background',\n"
+                    "        '1.2 Related Work'\n"
+                    "    ],\n"
+                    "    'Methods': [\n"
+                    "        '2.1 Data Collection',\n"
+                    "        '2.2 Analysis'\n"
+                    "    ]\n"
+                    "}"
     )
 
 load_dotenv()
