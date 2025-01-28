@@ -46,7 +46,7 @@ with st.sidebar:
     file_content = paper_ticher.get_paper_content()
     if st.session_state.messages == [] and file_content is not None:
         with st.spinner("Preparing the paper abstract"):
-            st.session_state.messages.append({"role": "assistant", "content": paper_ticher.get_abstract(file_content)})
+            st.write(paper_ticher.get_paper_structure())
 
         
 

@@ -2,7 +2,18 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from  langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 from dotenv import load_dotenv
 from pypdf import PdfReader
+from pydantic import BaseModel, Field
+from typing import Dict, List
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
 import os
+
+class SectionStruct(BaseModel):
+    sections: Dict[str, List[str]] = Field(
+        description="Ordered dictionary mapping main section titles to lists of their subsections. "
+                    "Example: {'Introduction': ['1.1 Background', '1.2 Related Work'], "
+                    "'Methods': ['2.1 Data Collection', '2.2 Analysis']}"
+    )
 
 load_dotenv()
 class PaperTicher:
@@ -20,7 +31,34 @@ class PaperTicher:
         לתת דוגמאות ולהסביר עקרונות ולהפוך את המידע לנגיש וקל להבנה.
         """
 
-
+    def get_paper_section(self):
+        parser = JsonOutputParser(pydantic_object=SectionStruct)
+        section_prompt = PromptTemplate(
+            template="""
+            Analyze the academic paper structure and extract ALL section and subsection titles exactly as they appear.
+            
+            Requirements:
+            - Sections are main headings (e.g: '1. Introduction', '2. Methodology')
+            - Subsections are sub-headings under each section (e.g: '2.1 Data Collection', '2.2 Analysis')
+            - Preserve original numbering and text formatting
+            - Include all hierarchical levels (e.g 2.3.1 if exists)
+            
+            Example Response:
+            {{
+                "Introduction": ["1.1 Background", "1.2 Research Questions"],
+                "Methods": ["2.1 Participants", "2.2 Experimental Design", "2.2.1 Apparatus"]
+            }}
+            
+            Paper Content:
+            {paper}
+            
+            {format_instructions}
+            """,
+            input_variables=["paper"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
+        chain = section_prompt | self.llm | parser
+        return chain.invoke({"paper": self.get_paper_content()})
 
     def get_paper_content(self):
         paper_prompt = """Here is the content of the paper you will be focusing on today. 
@@ -76,5 +114,19 @@ class PaperTicher:
         messages.append({"role": "user", "content": paper_content})
         abstract = self.llm_response(messages)
         return abstract
-        
+    
+    def get_paper_structure(self):
+        sections = self.get_paper_section()
+        result = ""
+        #for each key in sections, print the key and and for each value print the value
+        for section, subsections in sections['sections'].items():
+            result += f"\n\033[1m{section}\033[0m" + "\n"
+            for sub in subsections:
+                result += f"  ▪ {sub}" + "\n"
+        return result
 
+if __name__ == "__main__":
+    paper_path = r"C:\Users\yraich\OneDrive - Intel Corporation\Documents\My docs\Active curses\סמינר\Seminar-paper\SeminarAgent\paper2\Automatic Semantic Augmentation of Language Model Prompts (for Code Summarization).pdf"
+
+    paper_ticher = PaperTicher(paper_path)
+    print(paper_ticher.get_paper_structure())
