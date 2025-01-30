@@ -1,10 +1,8 @@
 import streamlit as st
-from paper_ticher import PaperTicher
-llm_name = st.selectbox("select llm model", 
-                                         ["gemini-2.0-flash-thinking-exp-01-21", 
-                                          "gemini-ewp-name"])
-paper_ticher = PaperTicher(llm_name)
-llm = paper_ticher.get_llm_model(llm_name)
+from paper_teacher import PaperTicher
+
+paper_teacher = PaperTicher()
+llm = paper_teacher.get_llm_model()
 
 # RTL CSS styling
 rtl_css = """
@@ -37,11 +35,15 @@ st.markdown(rtl_css, unsafe_allow_html=True)
 # Initialize chat history
 if 'messages' not in st.session_state:
     st.session_state.messages = []
-    st.header("Paper Ticher Chatbot")
+    st.header("Paper teacher Chatbot")
 
-
-# Sidebar for HTML upload
-# Sidebar for HTML upload
+llm_name = None
+llm_name = st.selectbox("select llm model",["gemini-2.0-flash-thinking-exp-01-21","learnlm-1.5-pro-experimental", "gemini-2.0-flash-exp", "azure"])
+if llm_name:
+    paper_teacher.set_llm_model(llm_name)
+    llm_name = None
+    
+sections_list = []
 with st.sidebar:
     st.header("File Upload")
     uploaded_file = st.file_uploader("Upload Paper file", type=[".pdf"])
@@ -52,13 +54,13 @@ with st.sidebar:
             st.session_state.processed_file = uploaded_file.name
             st.session_state.sections_processed = False  # Reset processing flag
         
-        paper_ticher.set_paper_path(uploaded_file)
-        file_content = paper_ticher.get_paper_content()
+        paper_teacher.set_paper_path(uploaded_file)
+        file_content = paper_teacher.get_paper_content()
 
         # Process sections only once per file
         if file_content and not st.session_state.get('sections_processed', False):
             with st.spinner("Preparing paper abstract"):
-                sections = paper_ticher.get_paper_section()
+                sections = paper_teacher.get_paper_section()
                 st.session_state.sections = sections
                 st.session_state.sections_processed = True
 
@@ -66,16 +68,20 @@ with st.sidebar:
         if st.session_state.get('sections_processed', False):
             for section, subsections in st.session_state.sections['sections'].items():
                 with st.expander(section):
+                    if subsections == []:
+                        subsections.append(section)
                     for sub in subsections:
                         if st.button(sub):
                             st.session_state.subsection_clicked = True
                             st.session_state.messages = []
                             st.session_state.selected_subsection = sub
+                            sections_list.append(sub)
 
 # Handle button clicks
 if st.session_state.get('subsection_clicked', False):
     st.session_state.subsection_clicked = False
-    auto_prompt = f"בבקשה תסביר את הסקשן: {st.session_state.selected_subsection}"
+    section_content = paper_teacher.get_section_content(st.session_state.selected_subsection, sections_list)
+    auto_prompt = f" בבקשה תסביר את הסקשן ובעברית : {section_content}"
 
     # Add auto-generated message to chat
     st.session_state.messages.append({"role": "user", "content": auto_prompt})
@@ -83,7 +89,7 @@ if st.session_state.get('subsection_clicked', False):
     # Generate and display response
     with st.spinner("Generating explanation..."):
         st.session_state.messages.append({"role": "user", "content": file_content})
-        answer = paper_ticher.llm_response(st.session_state.messages)
+        answer = paper_teacher.llm_response(st.session_state.messages)
         st.session_state.messages.pop()
         st.session_state.messages.pop()  # Remove auto-generated message
         st.session_state.messages.append({"role": "assistant", "content": answer})  
@@ -111,7 +117,7 @@ if prompt:
 
     # Generate bot response (example implementation)
     st.session_state.messages.append({"role": "user", "content": file_content})
-    answer = paper_ticher.llm_response(st.session_state.messages)
+    answer = paper_teacher.llm_response(st.session_state.messages)
     st.session_state.messages.pop()  
     # Store and display bot response
     st.session_state.messages.append({"role": "assistant", "content": answer})
