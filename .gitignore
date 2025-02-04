@@ -2,3 +2,4 @@
 .env
 /.venv
 __pycache__/paper_ticher.cpython-312.pyc
+/__pycache__
